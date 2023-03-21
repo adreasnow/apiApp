@@ -35,15 +35,9 @@ class JobsDB:
         failed = 3
 
         def __str__(self):
-            if self.value == 0:
-                return '<span style="color:blue;">Submitted</span>'
-            elif self.value == 1:
-                return '<span style="color:orange;">Running</span>'
-            elif self.value == 2:
-                return '<span style="color:teal;">Finished</span>'
-            elif self.value == 3:
-                return '<span style="color:red;">Failed</span>'
-
+            colourDict = {0: 'blue', 1: 'orange', 2: 'teal', 3: 'red'}
+            nameDict = {0: 'Submitted', 1: 'Running', 2: 'Finished', 3: 'Failed'}
+            return f'<span style="color:{colourDict[self.value]};">{nameDict[self.value]}</span>'
 
     class _Cluster(Enum):
         monarch = 0
@@ -51,12 +45,9 @@ class JobsDB:
         gadi = 2
 
         def __str__(self):
-            if self.value == 0:
-                return '<span style="color:blue;">MonARCH</span>'
-            elif self.value == 1:
-                return '<span style="color:green;">M3</span>'
-            elif self.value == 2:
-                return '<span style="color:red;">Gadi</span>'
+            colourDict = {0: 'blue', 1: 'green', 2: 'red'}
+            nameDict = {0: 'MonARCH', 1: 'M3', 2: 'Gadi'}
+            return f'<span style="color:{colourDict[self.value]};">{nameDict[self.value]}</span>'
 
     def _clusterToEnum(self, cluster: str) -> _Cluster:
         clusterDB = {'monarch': self._Cluster.monarch,
