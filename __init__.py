@@ -1,6 +1,5 @@
 from .db_handler import JobsDB
 from flask import Flask
-import pandas as pd
 import os
 
 app = Flask(__name__)
