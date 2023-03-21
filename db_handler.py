@@ -1,7 +1,7 @@
 import sqlalchemy as db
 import pandas as pd
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timedelta
 from pretty_html_table import build_table
 
 
@@ -88,18 +88,19 @@ class JobsDB:
             update = db.insert(self.table).values(name=name, status=status_in, cluster=cluster_in, datetime=datetime.now())
             out = f'{name} has been added'
         else:
-            update = db.update(self.table).values({'status': status_in, 'cluster': cluster_in}).where(self.table.columns.name == name)
+            update = db.update(self.table).values({'status': status_in, 'cluster': cluster_in, 'datetime': datetime.now()}).where(self.table.columns.name == name)
             out = f'{name} has been edited'
         self.connection.execute(update)
         self.connection.commit()
         return out
 
-    def query(self) -> str:
-        query = self.table.select()
+    def query(self, days: int = 30) -> str:
+        query = self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))
         output = self.connection.execute(query)
         results = output.fetchall()
         df = pd.DataFrame(results)
         df.columns = self.table.columns.keys()
+        df.sort_values(by='datetime', ascending=False, inplace=True)
         # pd.DataFrame.to_html(df[['name', 'status', 'cluster']], justify='center', index=False, escape=False)
         table = build_table(df[['name', 'status', 'cluster']], 
                             'orange_light', text_align='center', escape=False,

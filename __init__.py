@@ -13,15 +13,12 @@ def id(job_ID: str, status: str, cluster: str) -> str:
         out = jobsDB.add_job(job_ID, status, cluster)
     return out
 
-@app.route('/db/', methods=['GET', 'POST'])
-def db() -> str:
+@app.route('/db/', defaults={'days': 30})
+@app.route('/db/<int:days>/', methods=['GET', 'POST'])
+def db(days: int) -> str:
     with JobsDB() as jobsDB:
-        out = jobsDB.query()
+        out = jobsDB.query(days=days)
     return out
-
-@app.route('/', methods=['GET', 'POST'])
-def test() -> str:
-    return 'Running!'
 
 if __name__ == '__main__':
     app.run()
