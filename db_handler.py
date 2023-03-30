@@ -1,8 +1,9 @@
 import sqlalchemy as db
 import pandas as pd
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 from pretty_html_table import build_table
+import human_readable
 
 
 class JobsDB:
@@ -57,6 +58,7 @@ class JobsDB:
 
     def _statusToEnum(self, status: str) -> _Status:
         statusDB = {'running': self._Status.running,
+                    'started': self._Status.running,
                     'submitted': self._Status.submitted,
                     'finished': self._Status.finished,
                     'failed': self._Status.failed}
@@ -85,17 +87,20 @@ class JobsDB:
         self.connection.commit()
         return out
 
-    def query(self, days: int = 30) -> str:
-        query = self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))
+    def query(self, days: int = 30, search: str  = None) -> str:
+        if search == None:
+            query = self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))
+        else:
+            query = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.name.contains(search))
         output = self.connection.execute(query)
         results = output.fetchall()
         df = pd.DataFrame(results)
         df.columns = self.table.columns.keys()
         df.sort_values(by='datetime', ascending=False, inplace=True)
+        df['datetime'] = df['datetime'].apply(lambda x: human_readable.date_time(datetime.now() - x))
         # pd.DataFrame.to_html(df[['name', 'status', 'cluster']], justify='center', index=False, escape=False)
-        table = build_table(df[['name', 'status', 'cluster']], 
-                            'orange_light', text_align='center', escape=False,
-                            conditions={'Running': {'color': 'orange'}})
+        table = build_table(df[['name', 'status', 'cluster', 'datetime']], 
+                            'orange_light', text_align='center', escape=False, padding='2px 10px 2px 10px')
         center = '<style>#test {width:100%;height:100%;} table {margin: 0 auto; /* or margin: 0 auto 0 auto */}</style>'
         return center + table
 
