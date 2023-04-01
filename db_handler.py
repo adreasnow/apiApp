@@ -95,7 +95,10 @@ class JobsDB:
         output = self.connection.execute(query)
         results = output.fetchall()
         df = pd.DataFrame(results)
-        df.columns = self.table.columns.keys()
+        try:
+            df.columns = self.table.columns.keys()
+        except ValueError:
+            return "The search returned no results"
         df.sort_values(by='datetime', ascending=False, inplace=True)
         df['datetime'] = df['datetime'].apply(lambda x: human_readable.date_time(datetime.now() - x))
         # pd.DataFrame.to_html(df[['name', 'status', 'cluster']], justify='center', index=False, escape=False)
