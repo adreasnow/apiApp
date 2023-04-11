@@ -87,11 +87,14 @@ class JobsDB:
         self.connection.commit()
         return out
 
-    def query(self, days: int = 30, search: str  = None) -> str:
-        if search == None:
+    def query(self, days: int = 30, search: str  = '-') -> str:
+        if search == '-':
             query = self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))
         else:
-            query = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.name.contains(search))
+            query1 = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.name.contains(search))
+            query2 = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.status.contains(search))
+            query3 = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.cluster.contains(search))
+            query = db.union_all(query1, query2, query3)
         output = self.connection.execute(query)
         results = output.fetchall()
         df = pd.DataFrame(results)
