@@ -12,9 +12,9 @@ def id(job_ID: str, status: str, cluster: str) -> str:
         out = jobsDB.add_job(job_ID, status, cluster)
     return out
 
-@app.route('/db/', defaults={'days': 30, 'search': None})
-@app.route('/db/<int:days>/', defaults={'search': None})
-@app.route('/db/<int:days>/<search>/')
+@app.route('/db/', defaults={'days': 30, 'search': '-'})
+@app.route('/db/<search>/', defaults={'days': 30})
+@app.route('/db/<search>/<int:days>/')
 def db(days: int, search: str) -> str:
     with JobsDB() as jobsDB:
             out = jobsDB.query(days=days, search=search)
