@@ -77,17 +77,23 @@ class JobsDB:
         cluster_in = self._clusterToEnum(cluster)
         query = self.table.select().where(self.table.columns.name == name)
         output = self.connection.execute(query)
-        if output.fetchone() == None:
+        fetchone = output.fetchone()
+        if fetchone == None:
             update = db.insert(self.table).values(name=name, status=status_in, cluster=cluster_in, datetime=datetime.now())
-            out = f'{name} has been added'
+            return f'{name} has been added'
         else:
-            update = db.update(self.table).values({'status': status_in, 'cluster': cluster_in, 'datetime': datetime.now()}).where(self.table.columns.name == name)
-            out = f'{name} has been edited'
-        self.connection.execute(update)
-        self.connection.commit()
-        return out
+            print(f'#####################################{status_in}')
+            if status_in == self._Status.finished:
+                print(f'#####################################{datetime.now()-fetchone.datetime}')
+                if datetime.now()-fetchone.datetime < timedelta(seconds=10):
+                    return f'{name} has NOT been edited'
 
-    def query(self, days: int = 30, search: str  = '-') -> str:
+            update = db.update(self.table).values({'status': status_in, 'cluster': cluster_in, 'datetime': datetime.now()}).where(self.table.columns.name == name)
+            self.connection.execute(update)
+            self.connection.commit()
+            return f'{name} has been edited'
+
+    def query(self, days: int = 30, search: str = '-') -> str:
         if search == '-':
             query = self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))
         else:
@@ -105,8 +111,7 @@ class JobsDB:
         df.sort_values(by='datetime', ascending=False, inplace=True)
         df['datetime'] = df['datetime'].apply(lambda x: human_readable.date_time(datetime.now() - x))
         # pd.DataFrame.to_html(df[['name', 'status', 'cluster']], justify='center', index=False, escape=False)
-        table = build_table(df[['name', 'status', 'cluster', 'datetime']], 
+        table = build_table(df[['name', 'status', 'cluster', 'datetime']],
                             'orange_light', text_align='center', escape=False, padding='2px 10px 2px 10px')
         center = '<style>#test {width:100%;height:100%;} table {margin: 0 auto; /* or margin: 0 auto 0 auto */}</style>'
         return center + table
-
