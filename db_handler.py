@@ -97,10 +97,12 @@ class JobsDB:
         if search == '-':
             query = self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))
         else:
-            query1 = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.name.contains(search))
-            query2 = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.status.contains(search))
-            query3 = self.table.select().where((self.table.columns.datetime >= datetime.now()-timedelta(days=days)) & self.table.columns.cluster.contains(search))
-            query = db.union_all(query1, query2, query3)
+            searchTerms = search.split('+')
+            queries = [self.table.select().where(self.table.columns.datetime >= datetime.now()-timedelta(days=days))]
+            for subSearch in searchTerms:
+                queries += [self.table.select().where(self.table.columns.name.contains(subSearch))]
+            query = db.intersect(*queries)
+
         output = self.connection.execute(query)
         results = output.fetchall()
         df = pd.DataFrame(results)
@@ -110,7 +112,6 @@ class JobsDB:
             return "The search returned no results"
         df.sort_values(by='datetime', ascending=False, inplace=True)
         df['datetime'] = df['datetime'].apply(lambda x: human_readable.date_time(datetime.now() - x))
-        # pd.DataFrame.to_html(df[['name', 'status', 'cluster']], justify='center', index=False, escape=False)
         table = build_table(df[['name', 'status', 'cluster', 'datetime']],
                             'orange_light', text_align='center', escape=False, padding='2px 10px 2px 10px')
         center = '<style>#test {width:100%;height:100%;} table {margin: 0 auto; /* or margin: 0 auto 0 auto */}</style>'
