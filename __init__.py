@@ -17,9 +17,8 @@ def id(job_ID: str, status: str, cluster: str) -> str:
 @app.route('/db/<search>/<int:days>/')
 def db(days: int, search: str) -> str:
     with JobsDB() as jobsDB:
-            out = jobsDB.query(days=days, search=search)
+        out = jobsDB.query(days=days, search=search)
     return out
 
 if __name__ == '__main__':
     app.run()
-    

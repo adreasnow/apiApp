@@ -80,11 +80,11 @@ class JobsDB:
         fetchone = output.fetchone()
         if fetchone == None:
             update = db.insert(self.table).values(name=name, status=status_in, cluster=cluster_in, datetime=datetime.now())
+            self.connection.execute(update)
+            self.connection.commit()
             return f'{name} has been added'
         else:
-            print(f'#####################################{status_in}')
             if status_in == self._Status.finished:
-                print(f'#####################################{datetime.now()-fetchone.datetime}')
                 if datetime.now()-fetchone.datetime < timedelta(seconds=10):
                     return f'{name} has NOT been edited'
 
